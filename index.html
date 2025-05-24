@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jerusalem Weather Forecast</title>
+    <title>Israel Weather Forecast</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,12 +31,104 @@
         .ideal-temp {
             background-color: #90EE90;
         }
+        .temp-range-input {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        .temp-range-input input {
+            width: 60px;
+            padding: 5px;
+            margin: 0 10px;
+        }
+        .temp-range-input button {
+            padding: 5px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .temp-range-input button:hover {
+            background-color: #45a049;
+        }
+        .city-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        .city-selector select {
+            padding: 5px;
+            margin-left: 10px;
+            width: 200px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
-    <h1>Jerusalem Weather Forecast</h1>
+    <h1>Israel Weather Forecast</h1>
+    
+    <div class="city-selector">
+        <label>Select City:</label>
+        <select id="citySelect" onchange="updateCity()">
+            <option value="">Select a city</option>
+            <option value="Jerusalem,IL">Jerusalem</option>
+            <option value="Tel Aviv,IL">Tel Aviv</option>
+            <option value="Haifa,IL">Haifa</option>
+            <option value="Rishon LeZion,IL">Rishon LeZion</option>
+            <option value="Petah Tikva,IL">Petah Tikva</option>
+            <option value="Ashdod,IL">Ashdod</option>
+            <option value="Netanya,IL">Netanya</option>
+            <option value="Beer Sheva,IL">Beer Sheva</option>
+            <option value="Holon,IL">Holon</option>
+            <option value="Bnei Brak,IL">Bnei Brak</option>
+            <option value="Ramat Gan,IL">Ramat Gan</option>
+            <option value="Bat Yam,IL">Bat Yam</option>
+            <option value="Rehovot,IL">Rehovot</option>
+            <option value="Herzliya,IL">Herzliya</option>
+            <option value="Kfar Saba,IL">Kfar Saba</option>
+            <option value="Ra'anana,IL">Ra'anana</option>
+            <option value="Modiin,IL">Modiin</option>
+            <option value="Nahariya,IL">Nahariya</option>
+            <option value="Lod,IL">Lod</option>
+            <option value="Ramla,IL">Ramla</option>
+            <option value="Nazareth,IL">Nazareth</option>
+            <option value="Modiin Illit,IL">Modiin Illit</option>
+            <option value="Kiryat Gat,IL">Kiryat Gat</option>
+            <option value="Eilat,IL">Eilat</option>
+            <option value="Tiberias,IL">Tiberias</option>
+            <option value="Safed,IL">Safed</option>
+            <option value="Acre,IL">Acre</option>
+            <option value="Ashkelon,IL">Ashkelon</option>
+            <option value="Givatayim,IL">Givatayim</option>
+            <option value="Kiryat Arba,IL">Kiryat Arba</option>
+            <option value="Kiryat Bialik,IL">Kiryat Bialik</option>
+            <option value="Kiryat Motzkin,IL">Kiryat Motzkin</option>
+            <option value="Kiryat Yam,IL">Kiryat Yam</option>
+            <option value="Kiryat Shmona,IL">Kiryat Shmona</option>
+            <option value="Kiryat Malakhi,IL">Kiryat Malakhi</option>
+            <option value="Kiryat Ono,IL">Kiryat Ono</option>
+            <option value="Kiryat Tivon,IL">Kiryat Tivon</option>
+            <option value="Kiryat Ekron,IL">Kiryat Ekron</option>
+        </select>
+    </div>
+
     <p>Showing 3-hour temperature ranges for the next 5 days</p>
-    <p><span style="background-color: #90EE90; padding: 2px 5px;">Green rows</span> indicate temperatures between 15°C and 21°C</p>
+    
+    <div class="temp-range-input">
+        <label>Highlight temperatures between:</label>
+        <input type="number" id="minTemp" value="15" step="0.1">°C
+        <label>and</label>
+        <input type="number" id="maxTemp" value="21" step="0.1">°C
+        <button onclick="updateHighlighting()">Update Highlighting</button>
+    </div>
+    
+    <p><span style="background-color: #90EE90; padding: 2px 5px;">Green rows</span> indicate temperatures within your selected range</p>
     
     <div id="weatherTable">
         <table>
@@ -45,8 +137,7 @@
                     <th>Date</th>
                     <th>Start Time</th>
                     <th>End Time</th>
-                    <th>Low Temperature</th>
-                    <th>High Temperature</th>
+                    <th>Temperature</th>
                 </tr>
             </thead>
             <tbody id="weatherData">
@@ -59,11 +150,11 @@
 
     <script>
         const API_KEY = '0e32e7b6f01079de99b2112494377895';
-        const CITY = 'Jerusalem,IL';
+        let weatherData = [];
 
-        async function fetchWeatherData() {
+        async function fetchWeatherData(city) {
             try {
-                const url = `https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&appid=${API_KEY}&units=metric`;
+                const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`;
                 console.log('Requesting URL:', url);
                 
                 const response = await fetch(url);
@@ -74,43 +165,73 @@
                     throw new Error(`API Error: ${data.message || 'Failed to fetch weather data'}`);
                 }
 
-                const weatherData = data.list;
-                const tableBody = document.getElementById('weatherData');
-                tableBody.innerHTML = '';
-
-                weatherData.forEach((item, index) => {
-                    const date = new Date(item.dt * 1000);
-                    const temp = item.main.temp;
-                    const dateStr = date.toLocaleDateString();
-                    const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    
-                    // Calculate end time (3 hours later)
-                    const endDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-                    const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-                    const row = document.createElement('tr');
-                    // Add ideal-temp class if temperature is between 15 and 21
-                    if (temp >= 15 && temp <= 21) {
-                        row.classList.add('ideal-temp');
-                    }
-                    
-                    row.innerHTML = `
-                        <td>${dateStr}</td>
-                        <td>${timeStr}</td>
-                        <td>${endTimeStr}</td>
-                        <td>${temp.toFixed(1)}°C</td>
-                        <td>${temp.toFixed(1)}°C</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
+                weatherData = data.list;
+                displayWeatherData();
 
             } catch (error) {
                 document.getElementById('error').textContent = `Error: ${error.message}`;
             }
         }
 
+        function displayWeatherData() {
+            const tableBody = document.getElementById('weatherData');
+            tableBody.innerHTML = '';
+            const minTemp = parseFloat(document.getElementById('minTemp').value);
+            const maxTemp = parseFloat(document.getElementById('maxTemp').value);
+
+            weatherData.forEach((item, index) => {
+                const date = new Date(item.dt * 1000);
+                const temp = item.main.temp;
+                const dateStr = date.toLocaleDateString();
+                const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Calculate end time (3 hours later)
+                const endDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
+                const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                const row = document.createElement('tr');
+                // Add ideal-temp class if temperature is within the selected range
+                if (temp >= minTemp && temp <= maxTemp) {
+                    row.classList.add('ideal-temp');
+                }
+                
+                row.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td>${timeStr}</td>
+                    <td>${endTimeStr}</td>
+                    <td>${temp.toFixed(1)}°C</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateHighlighting() {
+            const minTemp = parseFloat(document.getElementById('minTemp').value);
+            const maxTemp = parseFloat(document.getElementById('maxTemp').value);
+            
+            if (isNaN(minTemp) || isNaN(maxTemp)) {
+                document.getElementById('error').textContent = 'Please enter valid numbers for temperature range';
+                return;
+            }
+            
+            if (minTemp > maxTemp) {
+                document.getElementById('error').textContent = 'Minimum temperature cannot be greater than maximum temperature';
+                return;
+            }
+            
+            document.getElementById('error').textContent = '';
+            displayWeatherData();
+        }
+
+        function updateCity() {
+            const city = document.getElementById('citySelect').value;
+            if (city) {
+                fetchWeatherData(city);
+            }
+        }
+
         // Fetch weather data when page loads
-        fetchWeatherData();
+        fetchWeatherData('Jerusalem,IL');
     </script>
 </body>
 </html> 
