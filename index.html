@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Israel Weather Forecast</title>
+    <title>תחזית מזג אוויר בישראל</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,7 +19,7 @@
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
-            text-align: left;
+            text-align: right;
         }
         th {
             background-color: #f2f2f2;
@@ -61,7 +61,7 @@
         }
         .city-selector select {
             padding: 5px;
-            margin-left: 10px;
+            margin-right: 10px;
             width: 200px;
         }
         .loading {
@@ -71,12 +71,12 @@
     </style>
 </head>
 <body>
-    <h1>Israel Weather Forecast</h1>
+    <h1>תחזית מזג אוויר בישראל</h1>
     
     <div class="city-selector">
-        <label>Select City:</label>
+        <label>בחר עיר:</label>
         <select id="citySelect" onchange="updateCity()">
-            <option value="">Select a city</option>
+            <option value="">בחר עיר</option>
             <option value="Jerusalem,IL">Jerusalem</option>
             <option value="Tel Aviv,IL">Tel Aviv</option>
             <option value="Haifa,IL">Haifa</option>
@@ -118,26 +118,26 @@
         </select>
     </div>
 
-    <p>Showing 3-hour temperature ranges for the next 5 days</p>
+    <p>מציג תחזית טמפרטורה ל-5 ימים הקרובים במרווחים של 3 שעות</p>
     
     <div class="temp-range-input">
-        <label>Highlight temperatures between:</label>
+        <label>הדגש טמפרטורות בין:</label>
         <input type="number" id="minTemp" value="15" step="0.1">°C
-        <label>and</label>
+        <label>ל-</label>
         <input type="number" id="maxTemp" value="21" step="0.1">°C
-        <button onclick="updateHighlighting()">Update Highlighting</button>
+        <button onclick="updateHighlighting()">עדכן הדגשה</button>
     </div>
     
-    <p><span style="background-color: #90EE90; padding: 2px 5px;">Green rows</span> indicate temperatures within your selected range</p>
+    <p><span style="background-color: #90EE90; padding: 2px 5px;">שורות ירוקות</span> מציגות טמפרטורות בטווח שבחרת</p>
     
     <div id="weatherTable">
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Temperature</th>
+                    <th>תאריך</th>
+                    <th>שעת התחלה</th>
+                    <th>שעת סיום</th>
+                    <th>טמפרטורה</th>
                 </tr>
             </thead>
             <tbody id="weatherData">
@@ -162,14 +162,14 @@
                 
                 if (!response.ok) {
                     console.error('API Response:', data);
-                    throw new Error(`API Error: ${data.message || 'Failed to fetch weather data'}`);
+                    throw new Error(`שגיאת API: ${data.message || 'נכשל בטעינת נתוני מזג אוויר'}`);
                 }
 
                 weatherData = data.list;
                 displayWeatherData();
 
             } catch (error) {
-                document.getElementById('error').textContent = `Error: ${error.message}`;
+                document.getElementById('error').textContent = `שגיאה: ${error.message}`;
             }
         }
 
@@ -179,15 +179,18 @@
             const minTemp = parseFloat(document.getElementById('minTemp').value);
             const maxTemp = parseFloat(document.getElementById('maxTemp').value);
 
+            const daysInHebrew = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
             weatherData.forEach((item, index) => {
                 const date = new Date(item.dt * 1000);
                 const temp = item.main.temp;
-                const dateStr = date.toLocaleDateString();
-                const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const dayOfWeek = daysInHebrew[date.getDay()];
+                const dateStr = date.toLocaleDateString('he-IL');
+                const timeStr = date.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
                 
                 // Calculate end time (3 hours later)
                 const endDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
-                const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const endTimeStr = endDate.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
 
                 const row = document.createElement('tr');
                 // Add ideal-temp class if temperature is within the selected range
@@ -196,7 +199,7 @@
                 }
                 
                 row.innerHTML = `
-                    <td>${dateStr}</td>
+                    <td>${dayOfWeek}, ${dateStr}</td>
                     <td>${timeStr}</td>
                     <td>${endTimeStr}</td>
                     <td>${temp.toFixed(1)}°C</td>
@@ -210,12 +213,12 @@
             const maxTemp = parseFloat(document.getElementById('maxTemp').value);
             
             if (isNaN(minTemp) || isNaN(maxTemp)) {
-                document.getElementById('error').textContent = 'Please enter valid numbers for temperature range';
+                document.getElementById('error').textContent = 'אנא הכנס מספרים תקינים לטווח הטמפרטורות';
                 return;
             }
             
             if (minTemp > maxTemp) {
-                document.getElementById('error').textContent = 'Minimum temperature cannot be greater than maximum temperature';
+                document.getElementById('error').textContent = 'טמפרטורה מינימלית לא יכולה להיות גבוהה מטמפרטורה מקסימלית';
                 return;
             }
             
