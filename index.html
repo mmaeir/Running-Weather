@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jerusalem Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+            margin-top: 20px;
+        }
+        .ideal-temp {
+            background-color: #90EE90;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jerusalem Weather Forecast</h1>
+    <p>Showing 3-hour temperature ranges for the next 5 days</p>
+    <p><span style="background-color: #90EE90; padding: 2px 5px;">Green rows</span> indicate temperatures between 15°C and 21°C</p>
+    
+    <div id="weatherTable">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Low Temperature</th>
+                    <th>High Temperature</th>
+                </tr>
+            </thead>
+            <tbody id="weatherData">
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <script>
+        const API_KEY = '0e32e7b6f01079de99b2112494377895';
+        const CITY = 'Jerusalem,IL';
+
+        async function fetchWeatherData() {
+            try {
+                const url = `https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&appid=${API_KEY}&units=metric`;
+                console.log('Requesting URL:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    console.error('API Response:', data);
+                    throw new Error(`API Error: ${data.message || 'Failed to fetch weather data'}`);
+                }
+
+                const weatherData = data.list;
+                const tableBody = document.getElementById('weatherData');
+                tableBody.innerHTML = '';
+
+                weatherData.forEach((item, index) => {
+                    const date = new Date(item.dt * 1000);
+                    const temp = item.main.temp;
+                    const dateStr = date.toLocaleDateString();
+                    const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // Calculate end time (3 hours later)
+                    const endDate = new Date(date.getTime() + (3 * 60 * 60 * 1000));
+                    const endTimeStr = endDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                    const row = document.createElement('tr');
+                    // Add ideal-temp class if temperature is between 15 and 21
+                    if (temp >= 15 && temp <= 21) {
+                        row.classList.add('ideal-temp');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${dateStr}</td>
+                        <td>${timeStr}</td>
+                        <td>${endTimeStr}</td>
+                        <td>${temp.toFixed(1)}°C</td>
+                        <td>${temp.toFixed(1)}°C</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                document.getElementById('error').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Fetch weather data when page loads
+        fetchWeatherData();
+    </script>
+</body>
+</html> 
