@@ -117,6 +117,31 @@
             .main-content { padding: 10px 2vw; }
             .header h1 { font-size: 2em; }
             th, td { font-size: 0.95em; }
+            .city-selector, .temp-range-input {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+                padding: 10px 4px;
+            }
+            .city-selector label, .temp-range-input label {
+                margin-bottom: 2px;
+            }
+            .city-selector select, .temp-range-input input, .temp-range-input button {
+                width: 100%;
+                font-size: 1.1em;
+                margin: 0 0 8px 0;
+                min-height: 44px;
+            }
+            .temp-range-input button {
+                margin-bottom: 0;
+            }
+            .header p { font-size: 1em; }
+            .main-content { margin: 10px 0 0 0; }
+            .table-responsive { margin: 0 -2vw; }
+        }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
         }
     </style>
 </head>
@@ -180,7 +205,7 @@
             <button onclick="updateHighlighting()">עדכן הדגשה</button>
         </div>
         <p style="margin: 0 0 18px 0;"><span style="background-color: #b2f7c1; padding: 2px 8px; border-radius: 4px;">שורות ירוקות</span> מציגות טמפרטורות בטווח שבחרת</p>
-        <div id="weatherTable">
+        <div id="weatherTable" class="table-responsive">
             <table>
                 <thead>
                     <tr>
